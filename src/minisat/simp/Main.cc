@@ -60,7 +60,7 @@ int main(int argc, char** argv)
         // Extra options:
         //
         IntOption    verb   ("MAIN", "verb",   "Verbosity level (0=silent, 1=some, 2=more).", 1, IntRange(0, 2));
-        IntOption    std_out("MAIN", "std-out","Select output file or stdout(0=file, 1=stdout).\n", 0, IntRange(0, 1));
+        IntOption    std_out("MAIN", "stdout","Select output file or stdout(0=file, 1=stdout).\n", 0, IntRange(0, 1));
         BoolOption   pre    ("MAIN", "pre",    "Completely turn on/off any preprocessing.", true);
         BoolOption   solve  ("MAIN", "solve",  "Completely turn on/off solving after preprocessing.", true);
         StringOption dimacs ("MAIN", "dimacs", "If given, stop after preprocessing and write the result to this file.");
