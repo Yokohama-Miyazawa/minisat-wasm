@@ -7,13 +7,14 @@ document.getElementById("run").addEventListener("click", () => {
 	document.getElementById("run").disabled = true;
 
 	let input = document.getElementById("input").value;
+	let cpuzzleInput = document.getElementById("cpuzzle-input").value;
 
 	let args = document.getElementById("arguments").value.split(" ");
 	if (args.length === 1 && args[0] === "") {
 		args = [];
 	}
 
-	MiniSat.run(input, args).then(result => {
+	MiniSat.run(input, cpuzzleInput, args).then(result => {
 		document.getElementById("output").value = result;
 	}).catch(reason => {
 		document.getElementById("output").value = `Execution failed:\n\n${reason}`;

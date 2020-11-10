@@ -25,7 +25,12 @@
 -3 -4 0</textarea>
 
 	<label for="arguments">Command line arguments</label>
-	<input type="text" id="arguments" value="-verb=0">
+	<input type="text" id="arguments" value="-verb=0 -stdout=1 -cpuzzle=1">
+
+	<label for="cpuzzle-input">Client Puzzle input</label>
+	<textarea id="cpuzzle-input">cp 128 109
+0000010011110101011001000111001011001001100111111010001000011011010011000111010011001110101100110010011001101
+10111110111000000010110000011010000110000100000100010011001100011111010000111101110001111111110100110101111011001000100011011100</textarea>
 
 	<button id="run">Run</button>
 	<textarea id="output" disabled></textarea>

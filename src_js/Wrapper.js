@@ -109,7 +109,7 @@ Wrapper._WASM_INITIALIZER = function (info, callback) {
  * @param {string[]} args - Additional command line arguments
  * @returns {Promise}
  */
-Wrapper.run = function (input, args) {
+Wrapper.run = function (input, cpuzzle, args) {
 	if (Wrapper._locked) {
 		return Promise.reject("An instance is already running");
 	}
@@ -134,7 +134,7 @@ Wrapper.run = function (input, args) {
 				"asm.js": false,
 				"wasmMemory": Wrapper._memory
 			}).then(instance => {
-				let result = instance.run(input, args);
+				let result = instance.run(input, cpuzzle, args);
 				// reset the memory for the next run.
 				new Uint32Array(Wrapper._memory.buffer).fill(0);
 
