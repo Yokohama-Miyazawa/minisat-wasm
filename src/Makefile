@@ -60,7 +60,7 @@ SOMINOR=1
 SORELEASE?=.0#   Declare empty to leave out from library file name.
 
 MINISAT_CXXFLAGS = -I. -D __STDC_LIMIT_MACROS -D __STDC_FORMAT_MACROS -Wall -Wno-parentheses -Wextra
-MINISAT_LDFLAGS  = -Wall -lz
+MINISAT_LDFLAGS  = -Wall -lz -lssl -lcrypto
 
 ifdef EMMAKEN_COMPILER
 	CXX = emcc
@@ -76,8 +76,8 @@ else
 VERB=
 endif
 
-SRCS = $(wildcard minisat/core/*.cc) $(wildcard minisat/simp/*.cc) $(wildcard minisat/utils/*.cc)
-HDRS = $(wildcard minisat/mtl/*.h) $(wildcard minisat/core/*.h) $(wildcard minisat/simp/*.h) $(wildcard minisat/utils/*.h)
+SRCS = $(wildcard minisat/core/*.cc) $(wildcard minisat/simp/*.cc) $(wildcard minisat/utils/*.cc) $(wildcard minisat/clientpuzzle/*.cc)
+HDRS = $(wildcard minisat/mtl/*.h) $(wildcard minisat/core/*.h) $(wildcard minisat/simp/*.h) $(wildcard minisat/utils/*.h) $(wildcard minisat/clientpuzzle/*.h)
 OBJS = $(filter-out %Main.o, $(SRCS:.cc=.o))
 
 r:	$(BUILD_DIR)/release/bin/$(MINISAT)
@@ -179,7 +179,7 @@ install-debug:	install-headers install-lib-debug
 install-headers:
 #       Create directories
 	$(INSTALL) -d $(DESTDIR)$(includedir)/minisat
-	for dir in mtl utils core simp; do \
+	for dir in mtl utils clientpuzzle core simp; do \
 	  $(INSTALL) -d $(DESTDIR)$(includedir)/minisat/$$dir ; \
 	done
 #       Install headers

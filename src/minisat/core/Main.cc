@@ -20,12 +20,15 @@ OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWA
 
 #include <errno.h>
 #include <zlib.h>
+#include <iostream>
+#include <string>
 
 #include "minisat/utils/System.h"
 #include "minisat/utils/ParseUtils.h"
 #include "minisat/utils/Options.h"
 #include "minisat/core/Dimacs.h"
 #include "minisat/core/Solver.h"
+#include "minisat/clientpuzzle/ClientPuzzle.h"
 
 using namespace Minisat;
 
@@ -61,18 +64,47 @@ int main(int argc, char** argv)
         // Extra options:
         //
         IntOption    verb   ("MAIN", "verb",   "Verbosity level (0=silent, 1=some, 2=more).", 1, IntRange(0, 2));
-        IntOption    std_out("MAIN", "stdout","Select output file or stdout(0=file, 1=stdout).\n", 0, IntRange(0, 1));
+        IntOption    std_out("MAIN", "stdout", "Select output file or stdout(0=file, 1=stdout).\n", 0, IntRange(0, 1));
+        IntOption    cpuzzle("MAIN", "cpuzzle","Do Client Puzzle of not(0=not, 1=do).\n", 0, IntRange(0, 1));
         IntOption    cpu_lim("MAIN", "cpu-lim","Limit on CPU time allowed in seconds.\n", 0, IntRange(0, INT32_MAX));
         IntOption    mem_lim("MAIN", "mem-lim","Limit on memory usage in megabytes.\n", 0, IntRange(0, INT32_MAX));
         BoolOption   strictp("MAIN", "strict", "Validate DIMACS header during parsing.", false);
-
+        
         parseOptions(argc, argv, true);
+
+        if(cpuzzle != 0){
+            ifstream ifs(argv[2], ios::in);
+            if (ifs.fail())
+                printf("ERROR: PUZZLE FILE NOT OPENED.\n"), exit(1);
+            ClientPuzzle CLP;
+            parsePuzzle(ifs, CLP);
+            ifs.close();
+            std::string puzzle_answer = puzzleMD4(CLP);
+            FILE *puzzle_res = std_out ? stdout : (argc >= 5) ? fopen(argv[4], "wb") : NULL;
+            if (puzzle_answer.compare("NOT FOUND") == 0){
+                std::cout << "PUZZLE UNSOLVABLE" << std::endl;
+                if (puzzle_res != NULL){
+                    fprintf(puzzle_res, "UNSOLVED\n");
+                    if(puzzle_res != stdout)
+                        fclose(puzzle_res);
+                }
+                exit(1);
+            } else {
+                std::cout << "PUZZLE SOLVED" << std::endl;
+                if (puzzle_res != NULL){
+                    fprintf(puzzle_res, "SOLVED\n");
+                    fprintf(puzzle_res, "%s\n", puzzle_answer.c_str());
+                    if (puzzle_res != stdout)
+                        fclose(puzzle_res);
+                }
+            }
+        }
 
         Solver S;
         double initial_time = cpuTime();
 
         S.verbosity = verb;
-
+        
         solver = &S;
         // Use signal handlers that forcibly quit until the solver will be able to respond to
         // interrupts:
@@ -81,36 +113,36 @@ int main(int argc, char** argv)
         // Try to set resource limits:
         if (cpu_lim != 0) limitTime(cpu_lim);
         if (mem_lim != 0) limitMemory(mem_lim);
-
+        
         if (argc == 1)
             printf("Reading from standard input... Use '--help' for help.\n");
-
+        
         gzFile in = (argc == 1) ? gzdopen(0, "rb") : gzopen(argv[1], "rb");
         if (in == NULL)
             printf("ERROR! Could not open file: %s\n", argc == 1 ? "<stdin>" : argv[1]), exit(1);
-
+        
         if (S.verbosity > 0){
             printf("============================[ Problem Statistics ]=============================\n");
             printf("|                                                                             |\n"); }
-
+        
         parse_DIMACS(in, S, (bool)strictp);
         gzclose(in);
-        //FILE* res = (argc >= 3) ? fopen(argv[2], "wb") : NULL;
-        FILE* res = std_out ? stdout : (argc >= 3) ? fopen(argv[2], "wb") : NULL;
+        //FILE *res = std_out ? stdout : (argc >= 3) ? fopen(argv[2], "wb") : NULL;
+        FILE *res = std_out ? stdout : cpuzzle ? ((argc >= 4) ? fopen(argv[3], "wb") : NULL) : (argc >= 3) ? fopen(argv[2], "wb") : NULL;
 
         if (S.verbosity > 0){
             printf("|  Number of variables:  %12d                                         |\n", S.nVars());
             printf("|  Number of clauses:    %12d                                         |\n", S.nClauses()); }
-
+        
         double parsed_time = cpuTime();
         if (S.verbosity > 0){
             printf("|  Parse time:           %12.2f s                                       |\n", parsed_time - initial_time);
             printf("|                                                                             |\n"); }
-
+ 
         // Change to signal-handlers that will only notify the solver and allow it to terminate
         // voluntarily:
         sigTerm(SIGINT_interrupt);
-
+       
         if (!S.simplify()){
             if (res != NULL) fprintf(res, "UNSAT\n"), fclose(res);
             if (S.verbosity > 0){
@@ -121,7 +153,7 @@ int main(int argc, char** argv)
             printf("UNSATISFIABLE\n");
             exit(20);
         }
-
+        
         vec<Lit> dummy;
         lbool ret = S.solveLimited(dummy);
         if (S.verbosity > 0){
@@ -141,7 +173,7 @@ int main(int argc, char** argv)
                 fprintf(res, "INDET\n");
             fclose(res);
         }
-
+        
 #ifdef NDEBUG
         exit(ret == l_True ? 10 : ret == l_False ? 20 : 0);     // (faster than "return", which will invoke the destructor for 'Solver')
 #else

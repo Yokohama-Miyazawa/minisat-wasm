@@ -60,19 +60,22 @@ function addRun () {
 	 * input is the content of the input file.
 	 * args can be used to pass additional command line arguments
 	 */
-	Module.run = function (input = "", args = []) {
+	Module.run = function (input = "", cpuzzleInput = "", args = []) {
 		Module.MyStdout.clear();
 
 		FS.writeFile("input", input);
+		FS.writeFile("cpuzzle", cpuzzleInput);
 
 		let callArgs = Array.from(args);
 		callArgs.push("/input");
+		callArgs.push("/cpuzzle");
 
 		callMain(callArgs);
 
 		Module.MyStdout.flush();
 
 		FS.unlink("input");
+		FS.unlink("cpuzzle");
 
 		return Module.MyStdout.getContents();
 	}
